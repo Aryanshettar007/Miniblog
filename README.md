@@ -2,6 +2,11 @@
 
 A production-ready full-stack application demonstrating secure authentication, role-based access control, and scalable REST API design.
 
+## 🚀 Live Deployments
+- **Frontend Live URL (Netlify):** [https://primeminiblog.netlify.app/](https://primeminiblog.netlify.app/)
+- **Backend API (Render):** [https://miniblog-jtuz.onrender.com/](https://miniblog-jtuz.onrender.com/)
+- **Swagger Docs:** [https://miniblog-jtuz.onrender.com/api-docs](https://miniblog-jtuz.onrender.com/api-docs)
+
 ## 📸 Project Previews
 
 ### Public Home Feed (Published Posts)
