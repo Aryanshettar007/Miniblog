@@ -55,8 +55,8 @@ router
   .post(
     protect,
     [
-      check('title', 'Title is required').not().isEmpty(),
-      check('content', 'Content is required').not().isEmpty()
+      check('title', 'Title is required').not().isEmpty().trim().escape(),
+      check('content', 'Content is required').not().isEmpty().trim().escape()
     ],
     validateResults,
     createPost
@@ -70,8 +70,8 @@ router
   .put(
     protect,
     [
-      check('title', 'Title cannot be empty').optional().not().isEmpty(),
-      check('content', 'Content cannot be empty').optional().not().isEmpty()
+      check('title', 'Title cannot be empty').optional().not().isEmpty().trim().escape(),
+      check('content', 'Content cannot be empty').optional().not().isEmpty().trim().escape()
     ],
     validateResults,
     updatePost

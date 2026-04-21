@@ -1,9 +1,11 @@
 openapi: 3.0.0
 info:
   title: MiniBlog API
-  description: API documentation for the MiniBlog full-stack application.
+  description: A production-ready RESTful API for managing blog posts with JWT authentication and Role-Based Access Control.
   version: 1.0.0
 servers:
+  - url: https://miniblog-jtuz.onrender.com/api/v1
+    description: Production Server
   - url: http://localhost:5000/api/v1
     description: Local development server
 components:
@@ -12,14 +14,16 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: Enter your JWT Bearer token here to access protected routes.
 security:
   - bearerAuth: []
 paths:
   /auth/register:
     post:
       tags:
-        - Auth
+        - Authentication
       summary: Register a new user
+      description: Creates a new user profile. By default, all profiles are assigned the "user" role.
       security: []
       requestBody:
         required: true
@@ -34,25 +38,38 @@ paths:
               properties:
                 name:
                   type: string
+                  example: "John Doe"
                 email:
                   type: string
                   format: email
+                  example: "john@example.com"
                 password:
                   type: string
                   minLength: 6
-                role:
-                  type: string
-                  enum: [user, admin]
+                  example: "securepassword123"
       responses:
         '201':
           description: User registered successfully
+          content:
+            application/json:
+              example:
+                success: true
+                message: "Authentication successful"
+                data:
+                  token: "jwt.token.string"
+                  user:
+                    id: "64efc..."
+                    name: "John Doe"
+                    email: "john@example.com"
+                    role: "user"
         '400':
           description: Validation error or user already exists
   /auth/login:
     post:
       tags:
-        - Auth
+        - Authentication
       summary: Login user
+      description: Authenticates a user and returns a JWT token.
       security: []
       requestBody:
         required: true
@@ -67,34 +84,77 @@ paths:
                 email:
                   type: string
                   format: email
+                  example: "john@example.com"
                 password:
                   type: string
+                  example: "securepassword123"
       responses:
         '200':
           description: User logged in successfully
+          content:
+            application/json:
+              example:
+                success: true
+                message: "Authentication successful"
+                data:
+                  token: "jwt.token.string"
+                  user:
+                    id: "64efc..."
+                    name: "John Doe"
+                    email: "john@example.com"
+                    role: "user"
         '401':
           description: Invalid credentials
   /auth/me:
     get:
       tags:
-        - Auth
-      summary: Get current logged-in user
+        - Authentication
+      summary: Get current authenticated user
+      description: Returns the profile data of the user currently holding the JWT token.
       responses:
         '200':
           description: User details retrieved
+          content:
+            application/json:
+              example:
+                success: true
+                message: "User fetched successfully"
+                data:
+                  _id: "64efc..."
+                  name: "John Doe"
+                  email: "john@example.com"
+                  role: "user"
+                  createdAt: "2026-04-21T00:00:00.000Z"
   /posts:
     get:
       tags:
         - Posts
       summary: Get all published posts
+      description: Publicly retrieves a list of all posts that have their status set to "published".
       security: []
       responses:
         '200':
-          description: List of published posts
+          description: List of published posts retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                message: "Published posts fetched successfully"
+                data:
+                  - _id: "64efc..."
+                    title: "Advanced React Patterns"
+                    content: "Let's explore some specialized React architectures..."
+                    status: "published"
+                    author:
+                      _id: "64aa..."
+                      name: "Jane Smith"
+                      email: "jane@example.com"
+                      role: "admin"
     post:
       tags:
         - Posts
       summary: Create a new post
+      description: Creates a new post attached to the authenticated user's ID. Defaults to draft status.
       requestBody:
         required: true
         content:
@@ -107,27 +167,39 @@ paths:
               properties:
                 title:
                   type: string
+                  example: "My First Blog Post"
                 content:
                   type: string
-                status:
-                  type: string
-                  enum: [draft, published]
+                  example: "This is the content of my post..."
       responses:
         '201':
           description: Post created successfully
+          content:
+            application/json:
+              example:
+                success: true
+                message: "Post created successfully"
+                data:
+                  _id: "64efcb..."
+                  title: "My First Blog Post"
+                  content: "This is the content of my post..."
+                  status: "draft"
+                  author: "64efa..."
   /posts/me:
     get:
       tags:
         - Posts
-      summary: Get current user's posts
+      summary: Get current user's personal posts
+      description: Returns a list of all posts (both published and draft) belonging to the authenticated user.
       responses:
         '200':
-          description: List of user's posts
+          description: List of personal posts
   /posts/{id}:
     get:
       tags:
         - Posts
-      summary: Get a specific post
+      summary: Retrieve a single post
+      description: Fetches a single post by its ID. Publicly viewable if published. Drafts only viewable by author or an admin.
       security: []
       parameters:
         - in: path
@@ -137,13 +209,14 @@ paths:
             type: string
       responses:
         '200':
-          description: Post details
+          description: Post details retrieved
         '404':
           description: Post not found
     put:
       tags:
         - Posts
-      summary: Update a post (author only)
+      summary: Update a post target (Author Only)
+      description: Authorizes only the original owner of the post to update its text.
       parameters:
         - in: path
           name: id
@@ -159,15 +232,18 @@ paths:
               properties:
                 title:
                   type: string
+                  example: "Updated Title"
                 content:
                   type: string
+                  example: "Updated content..."
       responses:
         '200':
           description: Post updated successfully
     delete:
       tags:
         - Posts
-      summary: Delete a post (author or admin)
+      summary: Delete a post (Author or Admin)
+      description: Hard deletes a post from the database. Allowed for the author, or any platform admin doing moderation.
       parameters:
         - in: path
           name: id
@@ -180,8 +256,8 @@ paths:
   /posts/{id}/publish:
     patch:
       tags:
-        - Posts
-      summary: Publish a draft post (author only)
+        - Status
+      summary: Publish a draft post (Author Only)
       parameters:
         - in: path
           name: id
@@ -194,8 +270,9 @@ paths:
   /posts/{id}/unpublish:
     patch:
       tags:
-        - Posts
-      summary: Unpublish a published post (author or admin)
+        - Status
+      summary: Unpublish a post (Author or Admin Moderation)
+      description: Downgrades a post from "published" back to "draft". Used by authors, or actively by Admins to hide inappropriate content.
       parameters:
         - in: path
           name: id
@@ -204,4 +281,4 @@ paths:
             type: string
       responses:
         '200':
-          description: Post unpublished
+          description: Post unpublished successfully

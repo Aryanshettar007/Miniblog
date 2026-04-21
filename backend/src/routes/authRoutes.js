@@ -18,8 +18,8 @@ const validateResults = (req, res, next) => {
 router.post(
   '/register',
   [
-    check('name', 'Name is required').not().isEmpty(),
-    check('email', 'Please include a valid email').isEmail(),
+    check('name', 'Name is required').not().isEmpty().trim().escape(),
+    check('email', 'Please include a valid email').isEmail().normalizeEmail(),
     check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
   ],
   validateResults,
@@ -29,7 +29,7 @@ router.post(
 router.post(
   '/login',
   [
-    check('email', 'Please include a valid email').isEmail(),
+    check('email', 'Please include a valid email').isEmail().normalizeEmail(),
     check('password', 'Password is required').exists()
   ],
   validateResults,
