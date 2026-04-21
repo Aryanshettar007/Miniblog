@@ -1,0 +1,207 @@
+openapi: 3.0.0
+info:
+  title: MiniBlog API
+  description: API documentation for the MiniBlog full-stack application.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Local development server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 6
+                role:
+                  type: string
+                  enum: [user, admin]
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Validation error or user already exists
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: User logged in successfully
+        '401':
+          description: Invalid credentials
+  /auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Get current logged-in user
+      responses:
+        '200':
+          description: User details retrieved
+  /posts:
+    get:
+      tags:
+        - Posts
+      summary: Get all published posts
+      security: []
+      responses:
+        '200':
+          description: List of published posts
+    post:
+      tags:
+        - Posts
+      summary: Create a new post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - content
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                status:
+                  type: string
+                  enum: [draft, published]
+      responses:
+        '201':
+          description: Post created successfully
+  /posts/me:
+    get:
+      tags:
+        - Posts
+      summary: Get current user's posts
+      responses:
+        '200':
+          description: List of user's posts
+  /posts/{id}:
+    get:
+      tags:
+        - Posts
+      summary: Get a specific post
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post details
+        '404':
+          description: Post not found
+    put:
+      tags:
+        - Posts
+      summary: Update a post (author only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+      responses:
+        '200':
+          description: Post updated successfully
+    delete:
+      tags:
+        - Posts
+      summary: Delete a post (author or admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post deleted successfully
+  /posts/{id}/publish:
+    patch:
+      tags:
+        - Posts
+      summary: Publish a draft post (author only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post published
+  /posts/{id}/unpublish:
+    patch:
+      tags:
+        - Posts
+      summary: Unpublish a published post (author or admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post unpublished
